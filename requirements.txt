@@ -1,0 +1,67 @@
+# ============================================================
+# 上交所医疗器械财报 RAG —— 依赖清单
+# ------------------------------------------------------------
+# 本机环境实况（2026-09-25 实测）：
+#   Python 3.11.4 (anaconda base, D:\software\anaconda\python.exe)
+#   GPU   : 无 NVIDIA 设备（仅 Intel Iris Xe 核显）→ 没有 CUDA
+#   因此 torch 一律装 CPU 版，不要加 --index-url 的 cu121/cu124 源
+#
+# ⚠️ 已知冲突：anaconda base 里装的是 transformers==2.1.1（2019 年的版本），
+#    sentence-transformers 需要 transformers>=4.34。
+#    请勿在 base 环境直接 pip install，务必先建虚拟环境：
+#       python -m venv .venv
+#       source .venv/Scripts/activate      # Git Bash
+#       pip install -r requirements.txt
+# ============================================================
+
+# ---- 文档解析 ----
+pymupdf>=1.24.0            # 本机已有 1.28.2；半年报 PDF 是文本层，可直接抽取
+python-docx>=1.1.0         # 本机已有 1.2.0，备用（部分附注为 docx）
+pdfplumber>=0.11.0         # 表格抽取兜底，pymupdf 表格识别不理想时用
+
+# ---- 数据处理 ----
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ---- 文本切分 ----
+langchain-text-splitters>=0.2.0
+
+# ---- 向量化（CPU 推理）----
+# torch 装 CPU 版；本机无 CUDA，见文件头说明
+#
+# ⚠️ torch 必须钉在 2.6.0，不要升。实测 2.14.0 的 Windows CPU wheel 在本机
+#    加载不了：import torch 直接 OSError [WinError 1114] Error loading c10.dll。
+#    排查过 PATH 里的 anaconda / Intel 目录、装了 VC 运行库，都没用；
+#    逐个 DLL 用 ctypes 试，c10.dll / shm.dll / torch_cpu.dll / torch_python.dll
+#    全部 1114，而 libiomp5md.dll / torch.dll / uv.dll 正常 —— 是那个 wheel
+#    本身的问题，不是环境问题。降到 2.6.0 后一切正常。
+torch==2.6.0
+sentence-transformers>=3.0.0   # tokenizer 与 pooling 的加载路径在 3.x 才稳定
+transformers>=4.40.0       # 必须覆盖 base 里的 2.1.1
+
+# ---- 向量检索 ----
+faiss-cpu>=1.8.0           # CPU 版；有 GPU 才用 faiss-gpu
+rank-bm25>=0.2.2           # 关键词检索，与向量做混合召回
+#
+# ⚠️ faiss 的 write_index/read_index 在 Windows 上走窄字符 fopen，路径含中文
+#    （本项目目录就是 D:\复旦\...）会报 "No such file or directory"，而目录其实
+#    存在。别改目录名，改调用方式：用 faiss.serialize_index/deserialize_index
+#    在内存里序列化，再用 Python 的文件 I/O 落盘（见 build_index.faiss_write）。
+
+# ---- 中文分词 ----
+jieba>=0.42.1
+
+# ---- LLM 调用（无 GPU，一律走 API）----
+openai>=1.30.0             # 兼容 DeepSeek / 通义千问 等 OpenAI 风格接口
+python-dotenv>=1.0.0
+
+# ---- 评测 ----
+ragas>=0.1.9               # 可选，依赖较重；轻量评测见 evaluation/ 下的自写指标
+
+# ---- 可视化 / 演示 ----
+streamlit>=1.35.0
+matplotlib>=3.8.0
+
+# ---- 开发 ----
+jupyter>=1.0.0
+tqdm>=4.66.0

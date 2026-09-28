@@ -1,0 +1,86 @@
+# ============================================================================
+#  上交所医疗器械财报 RAG —— GitHub 上传版 .gitignore
+#
+#  原则：**凡是能由「公开数据 + 代码 + .env」重新生成的，一律不入库**。
+#  仓库里只留代码、评测结论、以及两份小 CSV（公司名单 / 公告清单）。
+#  这样 clone 下来的人拿到的是能复现的全套逻辑，而不是 1.3 GB 的二进制。
+# ============================================================================
+
+# ---- 密钥（唯一绝对不能入库的东西）----
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- 模型权重（1.2 GB，需单独下载，见 README §0.3）----
+#  注意：实际目录是首字母大写的 Models/，而 .gitignore 的匹配**区分大小写**，
+#  只写小写 models/ 在 Linux/macOS 上会漏掉。两个都写上。
+Models/
+models/
+.cache/
+*.safetensors
+*.bin
+*.gguf
+
+# ---- 财报原始数据与中间产物（可由 manifest.csv 重新下载/生成）----
+data/raw/*
+data/pdf/*
+data/chunks/
+data/processed/*
+data/metadata.parquet
+data/*.parquet
+!data/raw/.gitkeep
+!data/pdf/.gitkeep
+!data/processed/.gitkeep
+#  exception：这两份小 CSV 要上传
+!data/company_list.csv
+!data/manifest.csv
+
+# ---- 索引（FAISS / BM25 共 105 MB，需本地构建，见 README §0.3）----
+#  含 index/、index/header/（表头增强变体）两套，以及构建日志。整个目录都不入库。
+index/*
+!index/.gitkeep
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Node（WAF 求解器用 jsdom，26 MB，本地 npm install）----
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# ---- 临时日志与中间文件 ----
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+# Office（Excel/Word）打开文件时生成的锁文件，如 evaluation/~$results.xlsx
+~$*
+*.swp
+*~
+
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.code-workspace

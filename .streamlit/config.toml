@@ -1,0 +1,19 @@
+# 监听 0.0.0.0：局域网内其它机器也能访问（需求要求）。
+# ⚠ 注意这意味着同网段的任何人都能打开这个页面并发起提问（会消耗你的
+#   DeepSeek 额度）。只在可信网络里这么开；要收回本机就改成 "127.0.0.1"。
+[server]
+address = "0.0.0.0"
+port = 8501
+# 上传/请求体上限，财报问答用不到大文件，保持默认的小值
+maxUploadSize = 5
+# 关掉文件监视器。开着的副作用实测过：监视器要遍历 sys.modules 去定位要盯的
+# 本地模块，这个遍历会**触发 transformers 的懒加载子模块逐个 import**，其中
+# `transformers.models.zoedepth` 依赖 torchvision —— 我们只做文本 embedding，
+# 没装也不需要它，于是每次交互都往日志里刷一条
+# `ModuleNotFoundError: No module named 'torchvision'` 的完整 Traceback
+# （实测 102 条，全是这一条，app 自身零报错）。关掉即根治，代价是改代码不再
+# 热重载，需手动重启 —— 对演示无影响。
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
